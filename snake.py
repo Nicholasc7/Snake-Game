@@ -6,7 +6,6 @@ import random
 
 COLORS = ["orange", "olive", "brown"]
 duplicates = []
-ct = []
 counter = 0
 dupe_dir = []
 
@@ -35,7 +34,7 @@ food.penup()
 food.shapesize(1)
 food.speed(0)
 food_spawns = []
-for i in range(-280, 280, 20):
+for i in range(-260, 260, 20):
     food_spawns.append(i)
 food.setpos(random.choice(food_spawns), random.choice(food_spawns))
 
@@ -77,38 +76,49 @@ def grid():
 
 
 def move(snake):
+    snake_y = snake.ycor()
+    snake_x = snake.xcor()
     direction = snake.heading()
-    if direction == 90:
+
+    if direction == 90 and snake_y != 260:
         ypos = snake.ycor()
         snake.sety(ypos + 20)
 
-    if direction == 0:
+    if direction == 0 and snake_x != 260:
         xpos = snake.xcor()
         snake.setx(xpos + 20)
 
-    if direction == 180:
+    if direction == 180 and snake_x != -260:
         xpos = snake.xcor()
         snake.setx(xpos - 20)
 
-    if direction == 270:
+    if direction == 270 and snake_y != -260:
         ypos = snake.ycor()
         snake.sety(ypos - 20)
 
 
 def up():
-    snake.setheading(90)
+    dir = snake.heading()
+    if dir != 270:
+        snake.setheading(90)
 
 
 def down():
-    snake.setheading(270)
+    dir = snake.heading()
+    if dir != 90:
+        snake.setheading(270)
 
 
 def right():
-    snake.setheading(0)
+    dir = snake.heading()
+    if dir != 180:
+        snake.setheading(0)
 
 
 def left():
-    snake.setheading(180)
+    dir = snake.heading()
+    if dir != 0:
+        snake.setheading(180)
 
 
 def food_move():
@@ -130,7 +140,6 @@ def snake_duplicate():
 
     # If there is a collision, create a head clone. Set hidden. Append to list of duplicates.
     if result == "a":
-        ct.append("a")
         dupe = snake.clone()
         dupe.ht()
         dupe.color(random.choice(COLORS))
@@ -146,37 +155,37 @@ def snake_duplicate():
         # Move the clone to the back of the line
         if snake_dir == 0:
             time.sleep(.25)
-            duplicates[len(ct)-1].setheading(snake_dir)
+            duplicates[len(duplicates)-1].setheading(snake_dir)
             pos = [snake_x - (20 * len(duplicates)), snake_y]
-            duplicates[len(ct)-1].st()
-            duplicates[len(ct)-1].goto(pos[0], pos[1])
+            duplicates[len(duplicates)-1].st()
+            duplicates[len(duplicates)-1].goto(pos[0], pos[1])
             win.update()
             time.sleep(.25)
 
         if snake_dir == 90:
             time.sleep(.25)
-            duplicates[len(ct)-1].setheading(snake_dir)
+            duplicates[len(duplicates)-1].setheading(snake_dir)
             pos = [snake_x, snake_y - (20 * len(duplicates))]
-            duplicates[len(ct)-1].st()
-            duplicates[len(ct)-1].goto(pos[0], pos[1])
+            duplicates[len(duplicates)-1].st()
+            duplicates[len(duplicates)-1].goto(pos[0], pos[1])
             win.update()
             time.sleep(.25)
 
         if snake_dir == 180:
             time.sleep(.25)
-            duplicates[len(ct)-1].setheading(snake_dir)
+            duplicates[len(duplicates)-1].setheading(snake_dir)
             pos = [snake_x + (20 * len(duplicates)), snake_y]
-            duplicates[len(ct)-1].st()
-            duplicates[len(ct)-1].goto(pos[0], pos[1])
+            duplicates[len(duplicates)-1].st()
+            duplicates[len(duplicates)-1].goto(pos[0], pos[1])
             win.update()
             time.sleep(.25)
 
         if snake_dir == 270:
             time.sleep(.25)
-            duplicates[len(ct)-1].setheading(snake_dir)
+            duplicates[len(duplicates)-1].setheading(snake_dir)
             pos = [snake_x, snake_y + 20 * len(duplicates)]
-            duplicates[len(ct)-1].st()
-            duplicates[len(ct)-1].goto(pos[0], pos[1])
+            duplicates[len(duplicates)-1].st()
+            duplicates[len(duplicates)-1].goto(pos[0], pos[1])
             win.update()
             time.sleep(.25)
 
@@ -186,30 +195,46 @@ def movement():
     turtle.onkey(down, "s")
     turtle.onkey(left, "a")
     turtle.onkey(right, "d")
+
     move(snake)
-    if len(duplicates) > 0:
-        for i in range(len(duplicates)):
+    time.sleep(.055)
+    snake_direction = snake.heading()
+    snake_x = snake.xcor()
+    snake_y = snake.ycor()
+
+    if snake_x < 260 and snake_x > -260:
+        if len(duplicates) >= 1:
             move(duplicates[0])
-            snake_dir = snake.heading()
-            duplicates[0].setheading(snake_dir)
+            duplicates[0].setheading(snake_direction)
+
+        if len(duplicates) >= 2:
+            for head in range(1, len(duplicates)):
+                move(duplicates[head])
+                current_dir = duplicates[head].heading()
+                xpos = duplicates[head].xcor()
+                ypos = duplicates[head].ycor()
+                prev_x = duplicates[head-1].xcor()
+                prev_y = duplicates[head-1].ycor()
+
+                if current_dir == 0 or current_dir == 180:
+                    if (prev_y == ypos + 20) or (prev_y == ypos - 20):
+                        duplicates[head].setheading(snake_direction)
+                if current_dir == 90 or current_dir == 270:
+                    if (prev_x == xpos + 20) or (prev_x == xpos - 20):
+                        duplicates[head].setheading(snake_direction)
+
 
     win.update()
 
 
-
-
-
 grid()
 while True:
+    # Listens for key inputs, moves snake HEAD.
+    # TODO: Move subsequent duplicates.
     movement()
 
-    turtle.onkey(up, "w")
-    turtle.onkey(down, "s")
-    turtle.onkey(left, "a")
-    turtle.onkey(right, "d")
-    snake_dir = snake.heading()
-
+    # Food spawn functionality. If food collision happens, spawns a head duplicate.
     snake_duplicate()
 
-    time.sleep(.055)
+    time.sleep(.015)
 win.mainloop()
